@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="VAK.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:wave="using:NAudio.Wave"
+    xmlns:h="using:VAK.Helpers"
+    mc:Ignorable="d"
+    Title="VAK">
+
+    <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+        <ToggleSwitch x:Name="voiceActivationSwitch" Toggled="VoiceActivationSwitch_Toggled"
+                      Header="Start voice activation" Margin="800,25,0,50"/>
+
+        <StackPanel Height="100" Width="500" Spacing="70"
+            BorderBrush="Black" BorderThickness="2" Padding="10" Margin="0,0,0,30"
+            Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <ComboBox x:Name="MicrophonesList" Width="300"
+                      Header="Listened microphone" ItemsSource="{x:Bind MicList}"
+                     IsEnabled="{x:Bind h:XAMLHelper.NegateBool(voiceActivationSwitch.IsOn), Mode=OneWay}">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="wave:WaveInCapabilities">
+                        <TextBlock Text="{x:Bind ProductName}" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+            <TextBox x:Name="keyToSend" Width="100" Height="60" Margin="0,0,0,15" 
+                     Text="V" Header="Key to send"
+                     IsEnabled="{x:Bind h:XAMLHelper.NegateBool(voiceActivationSwitch.IsOn), Mode=OneWay}" />
+        </StackPanel>
+    </StackPanel>
+</Window>
