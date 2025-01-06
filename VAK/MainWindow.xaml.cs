@@ -2,7 +2,10 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using NAudio.Wave;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
+using VAK.Types;
 
 namespace VAK
 {
@@ -12,7 +15,18 @@ namespace VAK
 
         private readonly List<WaveInCapabilities> MicList = Enumerable.Range(0, WaveIn.DeviceCount).Select(e => WaveIn.GetCapabilities(e)).ToList();
 
-        public MainWindow() => InitializeComponent();
+        private IEnumerable<Process> processes;
+        private ObservableCollection<ProcessInfo> Processes { get; set; } = [];
+
+        public MainWindow()
+        {
+            processes = Process.GetProcesses().Where(e => e.MainWindowHandle > 0); //ne récupère que les process ayant une fenêtre
+
+            foreach (var process in processes)
+                Processes.Add(new ProcessInfo(process));
+
+            InitializeComponent();
+        }
 
         private void VoiceActivationSwitch_Toggled(object sender, RoutedEventArgs e)
         {
@@ -30,7 +44,7 @@ namespace VAK
                     else
                         mic = MicList.First();
 
-                    voiceActivation = new VoiceActivation((short)(MicList.IndexOf(mic) - 1));
+                    voiceActivation = new VoiceActivation((short)MicList.IndexOf(mic));
                     voiceActivation.Start(KeyboardInputHelper.CharToHex(toSend));
                 }
                 else
@@ -38,6 +52,19 @@ namespace VAK
                     voiceActivation?.Stop();
                 }
             }
+        }
+
+        private void SearchButtonClick(object sender, RoutedEventArgs e)
+        {
+            processes = Process.GetProcessesByName(processSearch.Text).Where(e => e.MainWindowHandle > 0);
+
+            ProcessList.SelectedItem = null;
+
+            Processes.Clear();
+            foreach (var process in processes)
+                Processes.Add(new ProcessInfo(process));
+
+            ProcessList.SelectedItem = Processes.FirstOrDefault();
         }
     }
 }

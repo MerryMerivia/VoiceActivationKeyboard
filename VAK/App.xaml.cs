@@ -29,7 +29,7 @@ namespace VAK
                 Title = "VAK : Voice Activation Keyboard"
             };
 
-            m_window.AppWindow.Resize(new Windows.Graphics.SizeInt32(1000, 500));
+            m_window.AppWindow.Resize(new Windows.Graphics.SizeInt32(1200, 700));
 
             var presenter = m_window.AppWindow.Presenter as OverlappedPresenter;
             presenter!.IsResizable = false;

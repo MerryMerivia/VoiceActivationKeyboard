@@ -4,14 +4,24 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using VAK.Types;
 
 namespace VAK
 {
     internal partial class VoiceActivation : IDisposable
     {
-        // Importation des fonctions nécessaires pour simuler l'appui prolongé
+        /// <summary>
+        /// Fonction d'envoi d'événement clavier
+        /// </summary>
+        /// <param name="bVk">Code héxadécimal représentant de la touche concercée</param>
+        /// <param name="bScan">?</param>
+        /// <param name="dwFlags">Code héxadécimal réprésentant le type d'event</param>
+        /// <param name="dwExtraInfo">?</param>
         [LibraryImport("user32.dll", EntryPoint = "keybd_event", SetLastError = true)]
         private static partial void KeyboardEvent(byte bVk, byte bScan, int dwFlags, int dwExtraInfo);
+
+        [LibraryImport("user32.dll", EntryPoint = "GetForegroundWindow", SetLastError = true)]
+        private static partial IntPtr GetForegroundWindow();
 
         private const int KEYEVENTF_KEYDOWN = 0x0000; // Appui sur une touche
         private const int KEYEVENTF_KEYUP = 0x0002;   // Relâchement d'une touche
@@ -21,11 +31,13 @@ namespace VAK
 
         private readonly WaveInEvent waveInEvent;
 
+        private readonly ProcessInfo? focusProcess;
+
         private Task? VoiceActivationTask;
         private CancellationTokenSource Source { get; set; } = new();
         private CancellationToken SourceToken => Source.Token;
 
-        internal VoiceActivation(int deviceNumber = 0, int bufferMilliseconds = 20)
+        internal VoiceActivation(int deviceNumber = 0, ProcessInfo? processToFocus = null, int bufferMilliseconds = 20)
         {
             waveInEvent = new()
             {
@@ -34,6 +46,8 @@ namespace VAK
                 BufferMilliseconds = bufferMilliseconds
             };
             waveInEvent.DataAvailable += WaveIn_DataAvailable;
+
+            focusProcess = processToFocus;
         }
 
         internal void WaveIn_DataAvailable(object? sender, WaveInEventArgs e)
@@ -56,13 +70,25 @@ namespace VAK
         {
             Source = new();
 
-            VoiceActivationTask = Task.Run(() =>
+            VoiceActivationTask = Task.Run(async () =>
             {
                 waveInEvent.StartRecording();
                 bool pressed = false;
 
                 while (true)
                 {
+                    if (focusProcess is not null)
+                    {
+                        var currentActiveWindowHandle = GetForegroundWindow();
+
+                        if (focusProcess.MainWindowHandle != currentActiveWindowHandle)
+                        {
+                            await Task.Delay(300);
+                            continue;
+                        }
+
+                    }
+
                     if (Math.Abs(DateTime.Now.Millisecond - date.Millisecond) > KEYUP_MS_THRESHOLD)
                     {
                         if (pressed)
