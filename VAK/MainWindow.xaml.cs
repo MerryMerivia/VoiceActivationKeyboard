@@ -38,13 +38,15 @@ namespace VAK
                     char toSend = keyToSend.Text.Length != 0 ? keyToSend.Text.First() : 'A';
 
                     WaveInCapabilities mic;
-                    var selectedItem = MicrophonesList.SelectedItem;
-                    if (selectedItem != null)
-                        mic = (WaveInCapabilities)selectedItem;
+                    var selectedMic = MicrophonesList.SelectedItem;
+                    if (selectedMic != null)
+                        mic = (WaveInCapabilities)selectedMic;
                     else
                         mic = MicList.First();
 
-                    voiceActivation = new VoiceActivation((short)MicList.IndexOf(mic));
+                    var selectedProcess = (ProcessInfo)ProcessList.SelectedItem;
+
+                    voiceActivation = new VoiceActivation((short)MicList.IndexOf(mic), selectedProcess);
                     voiceActivation.Start(KeyboardInputHelper.CharToHex(toSend));
                 }
                 else
