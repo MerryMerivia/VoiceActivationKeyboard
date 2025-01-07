@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow } from 'electron';
+import { app, shell, BrowserWindow, ipcMain } from 'electron';
 import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import icon from '../../resources/icon.png?asset';
@@ -33,11 +33,14 @@ function createWindow(): void {
 
   connection.onDisconnect = (): void => {
     console.log('lost');
+    // TODO: Prévenir le renderer que la connexion est KO.
   };
 
-  connection.on('voice', (message: number) => {
-    mainWindow.webContents.send('voice', message);
+  connection.on('voice', (fraction: number) => {
+    mainWindow.webContents.send('voice', fraction);
   });
+
+  ipcMain.handle('microphones-list', () => connection.send('microphones-list'));
 
   mainWindow.on('close', () => {
     connection.close();
@@ -50,6 +53,8 @@ function createWindow(): void {
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'));
   }
+
+  mainWindow.webContents.openDevTools();
 }
 
 // This method will be called when Electron has finished

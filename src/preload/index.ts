@@ -15,6 +15,9 @@ const api: API = {
       },
     };
   },
+  getMicrophoneList: function () {
+    return ipcRenderer.invoke('microphones-list');
+  },
 };
 
 // Use `contextBridge` APIs to expose Electron APIs to

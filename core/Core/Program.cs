@@ -1,6 +1,7 @@
 using ElectronCgi.DotNet;
 using NAudio.Wave;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -18,7 +19,7 @@ namespace Core
         private const int KEYEVENTF_KEYUP = 0x0002;   // Relâchement d'une touche
         private const int KEYUP_MS_THRESHOLD = 1000;
 
-        
+
         private static DateTime date = DateTime.Now.AddDays(-1);
 
         private static WaveInEvent waveInEvent;
@@ -91,11 +92,22 @@ namespace Core
             }
         }
 
+        static void Stop()
+        {
+            Source.Cancel();
+        }
+
+        static void Dispose()
+        {
+            Stop();
+            waveInEvent.DataAvailable -= WaveIn_DataAvailable;
+        }
+
         static Connection Connection;
 
         static void Main(string[] args)
         {
-            int deviceNumber = 0; 
+            int deviceNumber = 0;
             int bufferMilliseconds = 20;
 
             waveInEvent = new()
@@ -110,11 +122,13 @@ namespace Core
                 .WithLogging()
                 .Build();
 
-            Start(0x42);  
-            
-            Connection.On<string, string>("greeting", name => "Hello " + name);
-            
-            Connection.Listen();  
+            var list = Enumerable.Range(0, WaveIn.DeviceCount).Select(e => WaveIn.GetCapabilities(e)).ToList();
+            Connection.On<object, List<WaveInCapabilities>>("microphones-list", (_) => list);
+
+            Start(0x42);
+
+            // Opération bloquante.
+            Connection.Listen();
         }
     }
 }

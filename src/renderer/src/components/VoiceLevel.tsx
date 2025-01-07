@@ -1,16 +1,16 @@
 import { useEffect, useState } from 'react';
 
 function VoiceLevel() {
-  const [text, setText] = useState<string>('');
+  const [fraction, setFraction] = useState<number>(0);
 
   useEffect(() => {
-    const subscription = window.api.subscribe('voice', (message) => setText(message));
+    const subscription = window.api.subscribe('voice', (fraction) => setFraction(fraction));
     return () => {
       subscription.unsubscribe();
     };
   }, []);
 
-  return <div>{text}</div>;
+  return <div>{fraction}</div>;
 }
 
 export default VoiceLevel;
