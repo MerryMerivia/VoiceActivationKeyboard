@@ -1,13 +1,9 @@
 import { ElectronAPI } from '@electron-toolkit/preload';
-
-export interface Api {
-  subscribe: (observer: (event: IpcRendererEvent, message: string) => void) => void;
-  unsubscribe: (observer: (event: IpcRendererEvent, message: string) => void) => void;
-}
+import { API } from './api';
 
 declare global {
   interface Window {
     electron: ElectronAPI;
-    api: Api;
+    api: API;
   }
 }

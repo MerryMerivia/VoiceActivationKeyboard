@@ -1,13 +1,19 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 import { electronAPI } from '@electron-toolkit/preload';
+import { API } from './api';
 
 // Custom APIs for renderer
-const api = {
-  subscribe: (listener: (event: IpcRendererEvent, message: string) => void): void => {
-    ipcRenderer.on('voice', listener);
-  },
-  unsubscribe: (listener: (event: IpcRendererEvent, message: string) => void): void => {
-    ipcRenderer.removeListener('voice', listener);
+const api: API = {
+  subscribe<T>(eventType: string, observer: (data: T) => void) {
+    const listener = (_: IpcRendererEvent, data: T) => {
+      observer(data);
+    };
+    ipcRenderer.on(eventType, listener);
+    return {
+      unsubscribe() {
+        ipcRenderer.removeListener(eventType, listener);
+      },
+    };
   },
 };
 

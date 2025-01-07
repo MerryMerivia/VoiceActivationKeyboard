@@ -1,16 +1,12 @@
-import { IpcRendererEvent } from 'electron';
 import { useEffect, useState } from 'react';
 
 function VoiceLevel() {
   const [text, setText] = useState<string>('');
 
   useEffect(() => {
-    const listener: (event: IpcRendererEvent, message: string) => void = (event, message) => {
-      setText(message);
-    };
-    window.api.subscribe(listener);
-    return (): void => {
-      window.api.unsubscribe(listener);
+    const subscription = window.api.subscribe('voice', (message) => setText(message));
+    return () => {
+      subscription.unsubscribe();
     };
   }, []);
 
